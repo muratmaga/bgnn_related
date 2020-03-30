@@ -10,6 +10,8 @@ import string
 #
 # INHSTools
 #
+#define global variable for node management
+globalHardPath = 'C:/Users/Murat/Downloads' #collect nodes created by module
 
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -44,12 +46,37 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     ScriptedLoadableModuleWidget.setup(self)
 
     # Instantiate and connect widgets ...
-
     #
-    # Parameters Area
+    # Input/Export Area
+    #
+    IOCollapsibleButton = ctk.ctkCollapsibleButton()
+    IOCollapsibleButton.text = "Input and Export"
+    self.layout.addWidget(IOCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    IOFormLayout = qt.QFormLayout(IOCollapsibleButton)
+    
+    #
+    # Import Button
+    #
+    self.importButton = qt.QPushButton("Import image")
+    self.importButton.toolTip = "Import the image selected in the table"
+    self.importButton.enabled = True
+    IOFormLayout.addRow(self.importButton)
+    
+    #
+    # Export Button
+    #
+    self.exportButton = qt.QPushButton("Export landmarks")
+    self.exportButton.toolTip = "Export the landmarks  for the image selected in the table"
+    self.exportButton.enabled = False
+    IOFormLayout.addRow(self.exportButton)
+    
+    #
+    # Image editing Area
     #
     parametersCollapsibleButton = ctk.ctkCollapsibleButton()
-    parametersCollapsibleButton.text = "Parameters"
+    parametersCollapsibleButton.text = "Image Editing"
     self.layout.addWidget(parametersCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -141,13 +168,15 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.flipYButton.connect('clicked(bool)', self.onFlipY)
     self.flipZButton.connect('clicked(bool)', self.onFlipZ)
     self.volumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.importButton.connect('clicked(bool)', self.onImport)
+    self.exportButton.connect('clicked(bool)', self.onExport)
 
     # Add vertical spacer
     self.layout.addStretch(1)
 
     # Refresh Apply button state
     self.onSelect()
-
+    
   def cleanup(self):
     pass
       
@@ -199,6 +228,34 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       return True
     else:
       return False
+  
+  def onImport(self):
+    logic = INHSToolsLogic()
+    activeCellString = logic.getActiveCell()
+    if bool(activeCellString):
+      if self.INHSFile(activeCellString):
+        self.volumeNode = logic.runImport(activeCellString)
+        if bool(self.volumeNode):
+          name = self.volumeNode.GetName()
+          self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode",name)
+          self.exportButton.enabled = True  
+        else: 
+          logging.debug("Error loading associated files.")
+      else:
+        logging.debug("Invalid filename: must include string: 'INHS'")
+    else:
+      logging.debug("No valid table cell selected.")
+  
+  def onExport(self):
+    if bool(self.fiducialNode):
+      fiducialName = self.fiducialNode.GetName()
+      fiducialOutput = os.path.join(globalHardPath, fiducialName+'.fcsv')
+      slicer.util.saveNode(self.fiducialNode, fiducialOutput)
+      slicer.mrmlScene.RemoveNode(self.fiducialNode)  
+      if bool(self.volumeNode):
+        slicer.mrmlScene.RemoveNode(self.volumeNode) 
+      self.exportButton.enabled = False      
+      
 
 class LogDataObject:
   """This class i
@@ -278,7 +335,25 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     slicer.vtkSlicerTransformLogic().hardenTransform(volumeNode)
     slicer.mrmlScene.RemoveNode(transform)
     
-  
+  def getActiveCell(self):
+    tableView=slicer.app.layoutManager().tableWidget(0).tableView()
+    if bool(tableView.selectedIndexes()):
+      index = tableView.selectedIndexes()[0]
+      indexTuple = [index.row(), index.column()]
+      tableString = tableView.mrmlTableNode().GetCellText(index.row()-1,index.column())
+      return tableString
+    else:
+      return ""
+    
+  def runImport(self,volumeFilename):
+    volumePath = os.path.join(globalHardPath, volumeFilename)
+    properties = {'singleFile': True}
+    try:
+      volumeNode = slicer.util.loadVolume(volumePath, properties)
+      return volumeNode
+    except:
+      False
+     
 class INHSToolsTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
