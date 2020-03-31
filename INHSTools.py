@@ -11,6 +11,7 @@ import string
 # INHSTools
 #
 #define global variable for node management
+#globalHardPath = '/Users/sara/Documents/' #collect nodes created by module
 globalHardPath = '/segmented/INHS_segmented_padded_fish/' #collect nodes created by module
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -340,7 +341,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onExport(self):
     if bool(self.fiducialNode):
       fiducialName = self.fiducialNode.GetName()
-      fiducialOutput = os.path.join(globalHardPath, fiducialName+'.fcsv')
+      fiducialOutput = os.path.join(globalHardPath, 'fcsv', fiducialName+'.fcsv')
+     #fiducialOutput = os.path.join(globalHardPath, fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
       self.updateTableButton.enabled = True      
       
