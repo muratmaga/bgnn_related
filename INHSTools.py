@@ -11,8 +11,7 @@ import string
 # INHSTools
 #
 #define global variable for node management
-globalHardPath = '/segmented/INHS_segmented_padded_fish/' #collect nodes created by module
-
+globalHardPath = 'C:/Users/Sara Rolfe/Downloads/fish' #collect nodes created by module
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
@@ -41,7 +40,36 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
+  def assignLayoutDescription(self, table):
+    customLayout = """
+    <layout type="horizontal" split="true">
+      <item>
+       <view class="vtkMRMLSliceNode" singletontag="Red">
+        <property name="orientation" action="default">Axial</property>
+        <property name="viewlabel" action="default">R</property>
+        <property name="viewcolor" action="default">#F34A33</property>
+       </view>
+      </item>
+      <item>
+       <view class="vtkMRMLTableViewNode" singletontag="TableViewerWindow_1">
+         <property name=\"viewlabel\" action=\"default\">T</property>"
+       </view>
+      </item>
+    </layout>
+    """
+    
+    customLayoutId=701
 
+    layoutManager = slicer.app.layoutManager()
+    layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(customLayoutId, customLayout)                                         
+
+    # Switch to the new custom layout 
+    layoutManager.setLayout(customLayoutId)
+    
+    # Select table in viewer
+    slicer.app.applicationLogic().GetSelectionNode().SetReferenceActiveTableID(table.GetID())
+    slicer.app.applicationLogic().PropagateTableSelection()
+    
   def setup(self):
     ScriptedLoadableModuleWidget.setup(self)
 
@@ -54,15 +82,34 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.layout.addWidget(IOCollapsibleButton)
 
     # Layout within the dummy collapsible button
-    IOFormLayout = qt.QFormLayout(IOCollapsibleButton)
+    #IOFormLayout = qt.QFormLayout(IOCollapsibleButton)
+    IOFormLayout= qt.QGridLayout(IOCollapsibleButton)
+    #
+    # Table volume selector
+    #
+    tableSelectorLable=qt.QLabel("Input table: ")
+    self.tableSelector = ctk.ctkPathLineEdit()
+    self.tableSelector.nameFilters=["*.csv"]
+    self.tableSelector.setToolTip( "Select table with filenames to process" )
+    #IOFormLayout.addRow("Input table: ", self.tableSelector)
+    
+    
+    self.selectorButton = qt.QPushButton("Load Table")
+    self.selectorButton.toolTip = "Load the table of image filenames to process"
+    self.selectorButton.enabled = False
+    #IOFormLayout.addRow(self.selectorButton)
+    IOFormLayout.addWidget(tableSelectorLable,1,1)
+    IOFormLayout.addWidget(self.tableSelector,1,2)
+    IOFormLayout.addWidget(self.selectorButton,1,3)
     
     #
     # Import Button
     #
     self.importButton = qt.QPushButton("Import image")
     self.importButton.toolTip = "Import the image selected in the table"
-    self.importButton.enabled = True
-    IOFormLayout.addRow(self.importButton)
+    self.importButton.enabled = False
+    #IOFormLayout.addRow(self.importButton)
+    IOFormLayout.addWidget(self.importButton,2,1,1,3)
     
     #
     # Export Button
@@ -70,7 +117,17 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.exportButton = qt.QPushButton("Export landmarks")
     self.exportButton.toolTip = "Export the landmarks  for the image selected in the table"
     self.exportButton.enabled = False
-    IOFormLayout.addRow(self.exportButton)
+    #IOFormLayout.addRow(self.exportButton)
+    IOFormLayout.addWidget(self.exportButton,3,1,1,3)
+    
+    #
+    # Update table
+    #
+    self.updateTableButton = qt.QPushButton("Update table")
+    self.updateTableButton.toolTip = "Save progress to CSV file and update the status column"
+    self.updateTableButton.enabled = False
+    #IOFormLayout.addRow(self.updateTableButton)
+    IOFormLayout.addWidget(self.updateTableButton,4,1,1,3)
     
     #
     # Image editing Area
@@ -129,7 +186,6 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     
     parametersFormLayout.addRow("Spacing (mm):", spacingLayout)
     
-    
     #
     # Apply Button
     #
@@ -167,9 +223,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.flipXButton.connect('clicked(bool)', self.onFlipX)
     self.flipYButton.connect('clicked(bool)', self.onFlipY)
     self.flipZButton.connect('clicked(bool)', self.onFlipZ)
+    self.selectorButton.connect('clicked(bool)', self.onLoadTable)
     self.volumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.tableSelector.connect("validInputChanged(bool)", self.onSelectTablePath)
     self.importButton.connect('clicked(bool)', self.onImport)
     self.exportButton.connect('clicked(bool)', self.onExport)
+    self.updateTableButton.connect('clicked(bool)', self.onUpdateTable)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -179,7 +238,34 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     
   def cleanup(self):
     pass
-      
+  
+  def updateStatus(self, index, string):
+    # refresh table from file, update the status column, and save 
+    name = self.fileTable.GetName()
+    slicer.mrmlScene.RemoveNode(self.fileTable)
+    self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
+    self.fileTable.SetName(name)
+    statusColumn = self.fileTable.GetTable().GetColumnByName('Status')
+    col.SetValue(index-1, string)
+    slicer.util.saveNode(self.fileTable, self.tableSelector.currentPath)
+    
+  def onSelectTablePath(self):
+    if(self.tableSelector.currentPath):
+      self.selectorButton.enabled = True
+    else:
+      self.selectorButton.enabled  = False
+  
+  def onLoadTable(self):
+    print("loading file")
+    self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
+    if bool(self.fileTable):
+      logic = INHSToolsLogic()
+      logic.checkForStatusColumn(self.fileTable, self.tableSelector.currentPath) # if not present adds and saves to file
+      self.importButton.enabled = True
+      self.assignLayoutDescription(self.fileTable)
+    else:
+      self.importButton.enabled = False
+  
   def onSelect(self):
     if bool(self.volumeSelector.currentNode()):  
       if self.INHSFile(self.volumeSelector.currentNode().GetName()):
@@ -239,6 +325,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
           name = self.volumeNode.GetName()
           self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode",name)
           self.exportButton.enabled = True  
+          self.volumeSelector.setCurrentNode(self.volumeNode)
+          
         else: 
           logging.debug("Error loading associated files.")
       else:
@@ -250,13 +338,24 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     if bool(self.fiducialNode):
       fiducialName = self.fiducialNode.GetName()
       fiducialOutput = os.path.join(globalHardPath, fiducialName+'.fcsv')
-      slicer.util.saveNode(self.fiducialNode, fiducialOutput)
-      slicer.mrmlScene.RemoveNode(self.fiducialNode)  
-      if bool(self.volumeNode):
-        slicer.mrmlScene.RemoveNode(self.volumeNode) 
-      self.exportButton.enabled = False      
+      slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
+      self.updateTableButton.enabled = True      
       
-
+  def onUpdateTable(self):
+    if bool(self.fiducialNode):  
+      slicer.mrmlScene.RemoveNode(self.fiducialNode)  
+    if bool(self.volumeNode):
+      slicer.mrmlScene.RemoveNode(self.volumeNode)
+    self.exportButton.enabled = False 
+    self.importButton.enabled = False 
+    self.selectorButton.enabled  = False
+    self.applySpacingButton.enabled = False
+    self.flipXButton.enabled = False
+    self.flipYButton.enabled = False
+    self.flipZButton.enabled = False 
+    self.updateTableButton.enabled = False
+    self.tableSelector.setCurrentPath('')
+    
 class LogDataObject:
   """This class i
      """
@@ -353,6 +452,21 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
       return volumeNode
     except:
       False
+  
+  def checkForStatusColumn(self, table, tableFilePath):
+    columnNumber = table.GetNumberOfColumns()
+    lastColumnName = table.GetColumnName(columnNumber-1)
+    if bool(lastColumnName != 'Status'):
+      print(lastColumnName, ' not Status')
+      print("Adding column for status")
+      col = table.AddColumn()
+      col.SetName('Status')
+      table.GetTable().Modified() # update table view
+      # Since no files have a status, write to file without reloading
+      slicer.util.saveNode(table, tableFilePath)
+      
+    
+    
      
 class INHSToolsTest(ScriptedLoadableModuleTest):
   """
