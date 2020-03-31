@@ -25,13 +25,16 @@ class INHSTools(ScriptedLoadableModule):
     self.parent.dependencies = []
     self.parent.contributors = ["Murat Maga (UW), Sara Rolfe (UW)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
-This module imports an image database (csv file) from which individual fish images from INHS collection can be loaded into 3D Slicer for landmarking.<br> 
-First, set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. <br>
-Then, if necessary flip the image along the X-axis to create a left-facing fish. <br>
-Finally, use the fiducials to digitize the landmarks in the sequence agreed. Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
-landmarks into the correct output folder automatically. <br>
-Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.. 
-
+This module imports an image database (csv file) from which individual fish images from INHS collection can be loaded into 3D Slicer for landmarking.
+<ol> 
+<li>Set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. </li>
+<li>If necessary flip the image along the X-axis to create a left-facing fish. </li>
+<li>Use the fiducials markup to digitize the landmarks in the sequence agreed.</li> 
+<li>Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
+landmarks into the correct output folder automatically.</li>
+<li>Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.</li> 
+<li>You can now start the next unprocessed specimen</li>
+</ol>
 This module was developed by Sara Rolfe and Murat Maga, for the NSF HDR  grant, "Biology Guided Neural Networks" (Award Number: 1939505).
 https://www.nsf.gov/awardsearch/showAward?AWD_ID=1939505&HistoricalAwards=false 
 """ # replace with organization, grant and thanks.
