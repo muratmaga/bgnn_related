@@ -24,12 +24,13 @@ class INHSTools(ScriptedLoadableModule):
     self.parent.dependencies = []
     self.parent.contributors = ["Murat Maga (UW), Sara Rolfe (UW)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
-This module imports an image sequence from Bruker Skyscan microCT's into Slicer as a scalar 3D volume with correct image spacing. Accepted formats are TIF, PNG, JPG and BMP. 
-User needs to be point out to the *_Rec.log file found in the reconstruction folder. 
+This module imports an image database (csv file) from which individual fish images from INHS collection can be loaded into 3D Slicer for landmarking. 
+First set the scale of the image (INHS DB only) to 1, 1, 1. Then, if necessary flip the image along the X-axis to create a left-facing fish. Finally,
+use the fiducials to digitize the landmarks in the sequence agreed. Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
+landmarks into the correct output folder automatically. Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.. 
 
-This module was developed by Sara Rolfe and Murat Maga, through a NSF ABI Development grant, "An Integrated Platform for Retrieval, Visualization and Analysis of 
-3D Morphology From Digital Biological Collections" (Award Numbers: 1759883).
-https://nsf.gov/awardsearch/showAward?AWD_ID=1759883&HistoricalAwards=false 
+This module was developed by Sara Rolfe and Murat Maga, for the NSF HDR  grant, "Biology Guided Neural Networks" (Award Number: 1939505).
+https://www.nsf.gov/awardsearch/showAward?AWD_ID=1939505&HistoricalAwards=false 
 """ # replace with organization, grant and thanks.
 
 #
