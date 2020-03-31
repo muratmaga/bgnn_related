@@ -246,7 +246,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
     self.fileTable.SetName(name)
     statusColumn = self.fileTable.GetTable().GetColumnByName('Status')
-    col.SetValue(index-1, string)
+    statusColumn.SetValue(index-1, string)
+    self.fileTable.GetTable().Modified() # update table view
     slicer.util.saveNode(self.fileTable, self.tableSelector.currentPath)
     
   def onSelectTablePath(self):
@@ -326,7 +327,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
           self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode",name)
           self.exportButton.enabled = True  
           self.volumeSelector.setCurrentNode(self.volumeNode)
-          
+          self.activeRow = logic.getActiveCellRow()
+          self.updateStatus(self.activeRow, 'Processing')
         else: 
           logging.debug("Error loading associated files.")
       else:
@@ -342,6 +344,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       self.updateTableButton.enabled = True      
       
   def onUpdateTable(self):
+    self.updateStatus(self.activeRow, 'Complete')
     if bool(self.fiducialNode):  
       slicer.mrmlScene.RemoveNode(self.fiducialNode)  
     if bool(self.volumeNode):
@@ -443,6 +446,14 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
       return tableString
     else:
       return ""
+  
+  def getActiveCellRow(self):
+    tableView=slicer.app.layoutManager().tableWidget(0).tableView()
+    if bool(tableView.selectedIndexes()):
+      index = tableView.selectedIndexes()[0]
+      return index.row()
+    else:  
+      return False
     
   def runImport(self,volumeFilename):
     volumePath = os.path.join(globalHardPath, volumeFilename)
