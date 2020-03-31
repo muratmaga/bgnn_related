@@ -11,7 +11,7 @@ import string
 # INHSTools
 #
 #define global variable for node management
-globalHardPath = 'C:/Users/Sara Rolfe/Downloads/fish' #collect nodes created by module
+globalHardPath = '/segmented/INHS_segmented_padded_fish/' #collect nodes created by module
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
