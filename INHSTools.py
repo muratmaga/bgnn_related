@@ -35,6 +35,8 @@ landmarks into the correct output folder automatically.</li>
 <li>Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.</li> 
 <li>You can now start the next unprocessed specimen</li>
 </ol>
+"""
+    self.parent.acknowledgementText = """
 This module was developed by Sara Rolfe and Murat Maga, for the NSF HDR  grant, "Biology Guided Neural Networks" (Award Number: 1939505).
 https://www.nsf.gov/awardsearch/showAward?AWD_ID=1939505&HistoricalAwards=false 
 """ # replace with organization, grant and thanks.
