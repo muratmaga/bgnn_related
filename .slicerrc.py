@@ -14,3 +14,6 @@ def NoInterpolate(caller,event):
       node.SetInterpolate(0)
 slicer.mrmlScene.AddObserver(slicer.mrmlScene.NodeAddedEvent, NoInterpolate)
 
+#Set the default Module to INHSTools
+slicer.util.selectModule("INHSTools")
+
