@@ -224,6 +224,14 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.flipZButton.enabled = False
     parametersFormLayout.addRow(self.flipZButton)
     
+    #
+    # Markups Module Launch Button
+    #
+    self.launchMarkupsButton = qt.QPushButton("Pop up Markups module")
+    self.launchMarkupsButton.toolTip = "Pop up the markups view for landmarks"
+    self.launchMarkupsButton.enabled = True
+    parametersFormLayout.addRow(self.launchMarkupsButton)
+    
     # connections
     self.applySpacingButton.connect('clicked(bool)', self.onApplySpacingButton)
     self.flipXButton.connect('clicked(bool)', self.onFlipX)
@@ -234,7 +242,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.tableSelector.connect("validInputChanged(bool)", self.onSelectTablePath)
     self.importButton.connect('clicked(bool)', self.onImport)
     self.exportButton.connect('clicked(bool)', self.onExport)
-
+    self.launchMarkupsButton.connect('clicked(bool)', self.onLaunchMarkups)
+    
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -244,6 +253,10 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def cleanup(self):
     pass
   
+  def onLaunchMarkups(self):
+    slicer.modules.markups.widgetRepresentation().setParent(None)
+    slicer.modules.markups.widgetRepresentation().show()
+    
   def updateStatus(self, index, string):
     # refresh table from file, update the status column, and save 
     name = self.fileTable.GetName()
