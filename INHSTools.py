@@ -11,8 +11,8 @@ import string
 # INHSTools
 #
 #define global variable for node management
-#globalHardPath = '/Users/sara/Documents/' #collect nodes created by module
-globalHardPath = '/segmented/INHS_segmented_padded_fish/' #collect nodes created by module
+globalHardPath = '/segmented/INHS_segmented_padded_fish/'
+
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
@@ -26,20 +26,25 @@ class INHSTools(ScriptedLoadableModule):
     self.parent.contributors = ["Murat Maga (UW), Sara Rolfe (UW)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
 This module imports an image database (csv file) from which individual fish images from INHS collection can be loaded into 3D Slicer for landmarking.
+First, set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. <br> 
+Then, if necessary flip the image along the X-axis to create a left-facing fish. <br>
 <ol> 
 <li>Set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. </li>
+Finally, use the fiducials to digitize the landmarks in the sequence agreed. Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
 <li>If necessary flip the image along the X-axis to create a left-facing fish. </li>
+landmarks into the correct output folder automatically. <br>
 <li>Use the fiducials markup to digitize the landmarks in the sequence agreed.</li> 
+Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.. 
 <li>Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
 landmarks into the correct output folder automatically.</li>
 <li>Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.</li> 
 <li>You can now start the next unprocessed specimen</li>
-</ol>
+</ol> 
 """
     self.parent.acknowledgementText = """
 This module was developed by Sara Rolfe and Murat Maga, for the NSF HDR  grant, "Biology Guided Neural Networks" (Award Number: 1939505).
-https://www.nsf.gov/awardsearch/showAward?AWD_ID=1939505&HistoricalAwards=false 
-""" # replace with organization, grant and thanks.
+https://www.nsf.gov/awardsearch/showAward?AWD_ID=1939505&HistoricalAwards=false  
+""" 
 
 #
 # INHSToolsWidget
@@ -129,14 +134,6 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     #IOFormLayout.addRow(self.exportButton)
     IOFormLayout.addWidget(self.exportButton,3,1,1,3)
     
-    #
-    # Update table
-    #
-    self.updateTableButton = qt.QPushButton("Update table")
-    self.updateTableButton.toolTip = "Save progress to CSV file and update the status column"
-    self.updateTableButton.enabled = False
-    #IOFormLayout.addRow(self.updateTableButton)
-    IOFormLayout.addWidget(self.updateTableButton,4,1,1,3)
     
     #
     # Image editing Area
@@ -237,7 +234,6 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.tableSelector.connect("validInputChanged(bool)", self.onSelectTablePath)
     self.importButton.connect('clicked(bool)', self.onImport)
     self.exportButton.connect('clicked(bool)', self.onExport)
-    self.updateTableButton.connect('clicked(bool)', self.onUpdateTable)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -253,7 +249,10 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     name = self.fileTable.GetName()
     slicer.mrmlScene.RemoveNode(self.fileTable)
     self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
+    self.fileTable.SetLocked(True)
     self.fileTable.SetName(name)
+    logic = INHSToolsLogic()
+    logic.hideCompletedSamples(self.fileTable)
     statusColumn = self.fileTable.GetTable().GetColumnByName('Status')
     statusColumn.SetValue(index-1, string)
     self.fileTable.GetTable().Modified() # update table view
@@ -266,13 +265,15 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       self.selectorButton.enabled  = False
   
   def onLoadTable(self):
-    print("loading file")
     self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
     if bool(self.fileTable):
       logic = INHSToolsLogic()
       logic.checkForStatusColumn(self.fileTable, self.tableSelector.currentPath) # if not present adds and saves to file
       self.importButton.enabled = True
       self.assignLayoutDescription(self.fileTable)
+      logic.hideCompletedSamples(self.fileTable)
+      self.fileTable.SetLocked(True)
+      self.fileTable.GetTable().Modified() # update table view
     else:
       self.importButton.enabled = False
   
@@ -349,12 +350,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     if bool(self.fiducialNode):
       fiducialName = self.fiducialNode.GetName()
       fiducialOutput = os.path.join(globalHardPath, 'fcsv', fiducialName+'.fcsv')
-     #fiducialOutput = os.path.join(globalHardPath, fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
-      self.updateTableButton.enabled = True      
+      self.updateTableAndGUI()     
       
-  def onUpdateTable(self):
+  def updateTableAndGUI(self):
     self.updateStatus(self.activeRow, 'Complete')
+    # clean up
     if bool(self.fiducialNode):  
       slicer.mrmlScene.RemoveNode(self.fiducialNode)  
     if bool(self.volumeNode):
@@ -365,9 +366,6 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.applySpacingButton.enabled = False
     self.flipXButton.enabled = False
     self.flipYButton.enabled = False
-    self.flipZButton.enabled = False 
-    self.updateTableButton.enabled = False
-    self.tableSelector.setCurrentPath('')
     
 class LogDataObject:
   """This class i
@@ -474,20 +472,32 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     except:
       False
   
+  def hideCompletedSamples(self, table):
+    rowNumber = table.GetNumberOfRows()
+    statusColumn = table.GetTable().GetColumnByName('Status')
+    tableView=slicer.app.layoutManager().tableWidget(0).tableView()
+    if not bool(statusColumn):
+      return
+    for currentRow in range(rowNumber-1):
+      string = statusColumn.GetValue(currentRow+1)
+      if (string): # any status should trigger hide row
+        print(string)
+        tableView.hideRow(currentRow+2)
+
+    table.GetTable().Modified() # update table view
+    
   def checkForStatusColumn(self, table, tableFilePath):
     columnNumber = table.GetNumberOfColumns()
-    lastColumnName = table.GetColumnName(columnNumber-1)
-    if bool(lastColumnName != 'Status'):
-      print(lastColumnName, ' not Status')
+    statusColumn = table.GetTable().GetColumnByName('Status')
+    if not bool(statusColumn):
       print("Adding column for status")
-      col = table.AddColumn()
-      col.SetName('Status')
+      col1 = table.AddColumn()
+      col1.SetName('User')
+      col2 = table.AddColumn()
+      col2.SetName('Status')
       table.GetTable().Modified() # update table view
       # Since no files have a status, write to file without reloading
       slicer.util.saveNode(table, tableFilePath)
-      
-    
-    
      
 class INHSToolsTest(ScriptedLoadableModuleTest):
   """
