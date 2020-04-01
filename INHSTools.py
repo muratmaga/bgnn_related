@@ -26,18 +26,14 @@ class INHSTools(ScriptedLoadableModule):
     self.parent.contributors = ["Murat Maga (UW), Sara Rolfe (UW)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
 This module imports an image database (csv file) from which individual fish images from INHS collection can be loaded into 3D Slicer for landmarking.
-First, set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. <br> 
-Then, if necessary flip the image along the X-axis to create a left-facing fish. <br>
 <ol> 
+<li>Navigate to <b>/segmented</b> folder, and then load the metadata.csv file in by clicking the <b>Load Table</b></li>
+<li>Click on the fish filename from the table and hit <b>Import Image</b></li>
 <li>Set the scale of the image (INHS DB only) to 1, 1, 1. Remember to adjust the field of view to bring the fish back to view. </li>
-Finally, use the fiducials to digitize the landmarks in the sequence agreed. Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
 <li>If necessary flip the image along the X-axis to create a left-facing fish. </li>
-landmarks into the correct output folder automatically. <br>
-<li>Use the fiducials markup to digitize the landmarks in the sequence agreed.</li> 
-Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.. 
+<li>Use the fiducials markup to digitize the landmarks in the sequence agreed. You can use the <b>Pop up Markups</b> button to bring the Marksup module as a separate window.</li> 
 <li>Once digitization is done, hit the <b>Export Landmarks</b> button to save the 
-landmarks into the correct output folder automatically.</li>
-<li>Remember to click the <b>Update Table</B> button to indicate you are done with that specimen.</li> 
+landmarks into the correct output folder automatically. This will remove the fish from the table view</li>
 <li>You can now start the next unprocessed specimen</li>
 </ol> 
 """
