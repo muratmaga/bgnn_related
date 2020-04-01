@@ -56,7 +56,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   """
   def assignLayoutDescription(self, table):
     customLayout = """
-    <layout type="horizontal" split="true">
+    <layout type="vertical" split="true">
       <item>
        <view class="vtkMRMLSliceNode" singletontag="Red">
         <property name="orientation" action="default">Axial</property>
@@ -254,8 +254,10 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     pass
   
   def onLaunchMarkups(self):
-    slicer.modules.markups.widgetRepresentation().setParent(None)
-    slicer.modules.markups.widgetRepresentation().show()
+    markups_widget = slicer.modules.markups.createNewWidgetRepresentation()
+    markups_widget.setMRMLScene(slicer.mrmlScene)
+    markups_widget.show()
+    markups_widget.enter()
     
   def updateStatus(self, index, string):
     # refresh table from file, update the status column, and save 
@@ -278,7 +280,13 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       self.selectorButton.enabled  = False
   
   def onLoadTable(self):
-    self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
+    if hasattr(self,'fileTable'):
+      tableName = self.fileTable.GetName()
+      slicer.mrmlScene.RemoveNode(self.fileTable)  
+      self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
+      self.fileTable.SetName(tableName)
+    else:
+      self.fileTable = slicer.util.loadNodeFromFile(self.tableSelector.currentPath, 'TableFile')
     if bool(self.fileTable):
       logic = INHSToolsLogic()
       logic.checkForStatusColumn(self.fileTable, self.tableSelector.currentPath) # if not present adds and saves to file
@@ -341,13 +349,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   
   def onImport(self):
     logic = INHSToolsLogic()
-    activeCellString = logic.getActiveCell()
-    if bool(activeCellString):
-      if self.INHSFile(activeCellString):
-        self.volumeNode = logic.runImport(activeCellString)
+    self.activeCellString = logic.getActiveCell()
+    if bool(self.activeCellString):
+      if self.INHSFile(self.activeCellString):
+        self.volumeNode = logic.runImport(self.activeCellString)
         if bool(self.volumeNode):
-          name = self.volumeNode.GetName()
-          self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode",name)
+          self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", 'F')
           self.exportButton.enabled = True  
           self.volumeSelector.setCurrentNode(self.volumeNode)
           self.activeRow = logic.getActiveCellRow()
@@ -361,10 +368,10 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   
   def onExport(self):
     if bool(self.fiducialNode):
-      fiducialName = self.fiducialNode.GetName()
+      fiducialName = os.path.splitext(self.activeCellString)[0]
       fiducialOutput = os.path.join(globalHardPath, 'fcsv', fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
-      self.updateTableAndGUI()     
+      self.updateTableAndGUI()         
       
   def updateTableAndGUI(self):
     self.updateStatus(self.activeRow, 'Complete')
@@ -375,10 +382,11 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       slicer.mrmlScene.RemoveNode(self.volumeNode)
     self.exportButton.enabled = False 
     self.importButton.enabled = True 
-    self.selectorButton.enabled  = False
+    self.selectorButton.enabled  = bool(self.tableSelector.currentPath)
     self.applySpacingButton.enabled = False
     self.flipXButton.enabled = False
     self.flipYButton.enabled = False
+
     
 class LogDataObject:
   """This class i
@@ -491,11 +499,10 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     tableView=slicer.app.layoutManager().tableWidget(0).tableView()
     if not bool(statusColumn):
       return
-    for currentRow in range(rowNumber-1):
-      string = statusColumn.GetValue(currentRow+1)
+    for currentRow in range(rowNumber):
+      string = statusColumn.GetValue(currentRow)
       if (string): # any status should trigger hide row
-        print(string)
-        tableView.hideRow(currentRow+2)
+        tableView.hideRow(currentRow+1)
 
     table.GetTable().Modified() # update table view
     
@@ -511,7 +518,7 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
       table.GetTable().Modified() # update table view
       # Since no files have a status, write to file without reloading
       slicer.util.saveNode(table, tableFilePath)
-           
+     
 class INHSToolsTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
