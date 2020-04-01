@@ -374,7 +374,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     if bool(self.volumeNode):
       slicer.mrmlScene.RemoveNode(self.volumeNode)
     self.exportButton.enabled = False 
-    self.importButton.enabled = False 
+    self.importButton.enabled = True 
     self.selectorButton.enabled  = False
     self.applySpacingButton.enabled = False
     self.flipXButton.enabled = False
@@ -511,7 +511,7 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
       table.GetTable().Modified() # update table view
       # Since no files have a status, write to file without reloading
       slicer.util.saveNode(table, tableFilePath)
-     
+           
 class INHSToolsTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
