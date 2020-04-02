@@ -486,7 +486,7 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
       return False
     
   def runImport(self,volumeFilename):
-    volumePath = os.path.join(globalHardPath, volumeFilename)
+    volumePath = os.path.join(imagePathStr, volumeFilename)
     properties = {'singleFile': True}
     try:
       volumeNode = slicer.util.loadVolume(volumePath, properties)
