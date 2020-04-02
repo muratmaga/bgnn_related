@@ -11,7 +11,8 @@ import string
 # INHSTools
 #
 #define global variable for node management
-globalHardPath = '/segmented/INHS_segmented_padded_fish/'
+imagePathStr = os.environ.get('SEGMENTED_DIR','/segmented/INHS_segmented_padded_fish/')
+outputPathStr = os.environ.get('CSV_DIR','/segmented/fcsv/')
 
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -369,7 +370,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onExport(self):
     if bool(self.fiducialNode):
       fiducialName = os.path.splitext(self.activeCellString)[0]
-      fiducialOutput = os.path.join(globalHardPath, 'fcsv', fiducialName+'.fcsv')
+      fiducialOutput = os.path.join(outputPathStr, fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
       self.updateTableAndGUI()         
       
