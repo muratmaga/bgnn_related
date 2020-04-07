@@ -13,6 +13,7 @@ import string
 #define global variable for node management
 imagePathStr = os.environ.get('SEGMENTED_DIR','/segmented/INHS_segmented_padded_fish/')
 outputPathStr = os.environ.get('CSV_DIR','/segmented/fcsv/')
+labs = os.environ.get('labs','unknown_lab')
 
 class INHSTools(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -267,6 +268,9 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     logic.hideCompletedSamples(self.fileTable)
     statusColumn = self.fileTable.GetTable().GetColumnByName('Status')
     statusColumn.SetValue(index-1, string)
+    #set the user to the lab based on an environment variable
+    userColumn = self.fileTable.GetTable().GetColumnByName('User')
+    userColumn.SetValue(index-1, labs)
     self.fileTable.GetTable().Modified() # update table view
     slicer.util.saveNode(self.fileTable, self.tableSelector.currentPath)
     
