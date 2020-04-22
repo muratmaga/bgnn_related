@@ -115,23 +115,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     IOFormLayout.addWidget(self.selectorButton,1,3)
     
     #
-    # Import Button
+    # Import Volume Button
     #
-    self.importButton = qt.QPushButton("Import image")
-    self.importButton.toolTip = "Import the image selected in the table"
-    self.importButton.enabled = False
-    #IOFormLayout.addRow(self.importButton)
-    IOFormLayout.addWidget(self.importButton,2,1,1,3)
-    
-    #
-    # Export Button
-    #
-    self.exportButton = qt.QPushButton("Export landmarks")
-    self.exportButton.toolTip = "Export the landmarks  for the image selected in the table"
-    self.exportButton.enabled = False
-    #IOFormLayout.addRow(self.exportButton)
-    IOFormLayout.addWidget(self.exportButton,3,1,1,3)
-    
+    self.importVolumeButton = qt.QPushButton("Import image")
+    self.importVolumeButton.toolTip = "Import the image selected in the table"
+    self.importVolumeButton.enabled = False
+    IOFormLayout.addWidget(self.importVolumeButton,2,1,1,3)
     
     #
     # Image editing Area
@@ -159,44 +148,44 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.volumeSelector.setToolTip( "Select volume to resample" )
     parametersFormLayout.addRow("Input Volume: ", self.volumeSelector)
     
-    #
-    # input spacing
-    #
-    spacingLayout= qt.QGridLayout()
-    self.spacingX = ctk.ctkDoubleSpinBox()
-    self.spacingX.value = 1
-    self.spacingX.minimum = 0
-    self.spacingX.singleStep = 1
-    self.spacingX.setDecimals(2)
-    self.spacingX.setToolTip("Input spacing X")
+#    #
+#    # input spacing
+#    #
+#    spacingLayout= qt.QGridLayout()
+#    self.spacingX = ctk.ctkDoubleSpinBox()
+#    self.spacingX.value = 1
+#    self.spacingX.minimum = 0
+#    self.spacingX.singleStep = 1
+#    self.spacingX.setDecimals(2)
+#    self.spacingX.setToolTip("Input spacing X")
+#
+#    self.spacingY = ctk.ctkDoubleSpinBox()
+#    self.spacingY.value = 1
+#    self.spacingY.minimum = 0
+#    self.spacingY.singleStep = 1
+#    self.spacingY.setDecimals(2)
+#    self.spacingY.setToolTip("Input spacing Y")
+#
+#    self.spacingZ = ctk.ctkDoubleSpinBox()
+#    self.spacingZ.value = 1
+#    self.spacingZ.minimum = 0
+#    self.spacingZ.singleStep = 1
+#    self.spacingZ.setDecimals(2)
+#    self.spacingZ.setToolTip("Input spacing Z")
+#
+#    spacingLayout.addWidget(self.spacingX,1,2)
+#    spacingLayout.addWidget(self.spacingY,1,3)
+#    spacingLayout.addWidget(self.spacingZ,1,4)
+#
+#    parametersFormLayout.addRow("Spacing (mm):", spacingLayout)
     
-    self.spacingY = ctk.ctkDoubleSpinBox()
-    self.spacingY.value = 1
-    self.spacingY.minimum = 0
-    self.spacingY.singleStep = 1
-    self.spacingY.setDecimals(2)
-    self.spacingY.setToolTip("Input spacing Y")
-    
-    self.spacingZ = ctk.ctkDoubleSpinBox()
-    self.spacingZ.value = 1
-    self.spacingZ.minimum = 0
-    self.spacingZ.singleStep = 1
-    self.spacingZ.setDecimals(2)
-    self.spacingZ.setToolTip("Input spacing Z")
-    
-    spacingLayout.addWidget(self.spacingX,1,2)
-    spacingLayout.addWidget(self.spacingY,1,3)
-    spacingLayout.addWidget(self.spacingZ,1,4)
-    
-    parametersFormLayout.addRow("Spacing (mm):", spacingLayout)
-    
-    #
-    # Apply Button
-    #
-    self.applySpacingButton = qt.QPushButton("Apply Spacing")
-    self.applySpacingButton.toolTip = "Run the algorithm."
-    self.applySpacingButton.enabled = False
-    parametersFormLayout.addRow(self.applySpacingButton)
+#    #
+#    # Apply Button
+#    #
+#    self.applySpacingButton = qt.QPushButton("Apply Spacing")
+#    self.applySpacingButton.toolTip = "Run the algorithm."
+#    self.applySpacingButton.enabled = False
+#    parametersFormLayout.addRow(self.applySpacingButton)
     
     #
     # Flip X-axis Button
@@ -223,24 +212,70 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout.addRow(self.flipZButton)
     
     #
-    # Markups Module Launch Button
+    # Annotations area
     #
-    self.launchMarkupsButton = qt.QPushButton("Pop up Markups module")
-    self.launchMarkupsButton.toolTip = "Pop up the markups view for landmarks"
-    self.launchMarkupsButton.enabled = True
-    parametersFormLayout.addRow(self.launchMarkupsButton)
+    annotationsButton = ctk.ctkCollapsibleButton()
+    annotationsButton.text = "Annotations"
+    self.layout.addWidget(annotationsButton)
+    annotationsLayout= qt.QGridLayout(annotationsButton)
+    
+    # Set up tabs to split workflow
+    tabsWidget = qt.QTabWidget()
+    landmarkTab = qt.QWidget()
+    landmarkTabLayout = qt.QFormLayout(landmarkTab)
+    segmentTab = qt.QWidget()
+    segmentTabLayout = qt.QFormLayout(segmentTab)
+
+    tabsWidget.addTab(landmarkTab, "Landmark")
+    tabsWidget.addTab(segmentTab, "Segment")
+    annotationsLayout.addWidget(tabsWidget)
+
+    #
+    # Markups Launch Button
+    #
+    self.launchMarkupsButton = qt.QPushButton("Start landmarking")
+    self.launchMarkupsButton.toolTip = "Pop up the markups view for placing landmarks"
+    self.launchMarkupsButton.enabled = False
+    landmarkTabLayout.addRow(self.launchMarkupsButton)
+    
+    #
+    # Export Landmarks Button
+    #
+    self.exportLandmarksButton = qt.QPushButton("Export landmarks")
+    self.exportLandmarksButton.toolTip = "Export landmarks placed on the selected image"
+    self.exportLandmarksButton.enabled = False
+    landmarkTabLayout.addRow(self.exportLandmarksButton)
+    
+    #
+    # Initiate Segmentation
+    #
+    self.startSegmentationButton = qt.QPushButton("Start segmenation")
+    self.startSegmentationButton.toolTip = "Initialize segmentation and view Segment Editor"
+    self.startSegmentationButton.enabled = False
+    segmentTabLayout.addRow(self.startSegmentationButton)
+    
+    #
+    # Export Segmentation
+    #
+    self.exportSegmentationButton = qt.QPushButton("Export segmenation")
+    self.exportSegmentationButton.toolTip = "Export segmentation as a model"
+    self.exportSegmentationButton.enabled = False
+    segmentTabLayout.addRow(self.exportSegmentationButton)
     
     # connections
-    self.applySpacingButton.connect('clicked(bool)', self.onApplySpacingButton)
+    #self.applySpacingButton.connect('clicked(bool)', self.onApplySpacingButton)
     self.flipXButton.connect('clicked(bool)', self.onFlipX)
     self.flipYButton.connect('clicked(bool)', self.onFlipY)
     self.flipZButton.connect('clicked(bool)', self.onFlipZ)
     self.selectorButton.connect('clicked(bool)', self.onLoadTable)
     self.volumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.tableSelector.connect("validInputChanged(bool)", self.onSelectTablePath)
-    self.importButton.connect('clicked(bool)', self.onImport)
-    self.exportButton.connect('clicked(bool)', self.onExport)
+    self.importVolumeButton.connect('clicked(bool)', self.onImportVolume)
+    self.exportLandmarksButton.connect('clicked(bool)', self.onExportLandmarks)
     self.launchMarkupsButton.connect('clicked(bool)', self.onLaunchMarkups)
+    self.startSegmentationButton.connect('clicked(bool)', self.onStartSegmentation)
+    self.exportSegmentationButton.connect('clicked(bool)', self.onExportSegmentation)
+
     
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -251,11 +286,34 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def cleanup(self):
     pass
   
+  def onStartSegmentation(self):
+    logic = INHSToolsLogic()
+    self.segmentationNode = logic.initializeSegmentation(self.volumeNode)
+    self.exportSegmentationButton.enabled = True
+    slicer.util.selectModule(slicer.modules.segmenteditor)
+  
+  def onExportSegmentation(self):
+    if hasattr(self,'segmentationNode'):
+      segmentName = self.segmentationNode.GetName()
+      self.labelMap = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode', segmentName)
+      success = slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(self.segmentationNode,self.labelMap)
+      if(success):
+        segmentationName = os.path.splitext(self.activeCellString)[0]
+        segmentationOutput = os.path.join(outputPathStr, 'Segmentations', segmentationName +'.nrrd')
+        slicer.util.saveNode(self.labelMap, segmentationOutput)
+        self.updateTableAndGUI()
+      else:
+        logging.debug("No valid segments to export.")
+    else:
+      logging.debug("No valid segmentation node to export.")
+      
   def onLaunchMarkups(self):
+    self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", 'F')
     markups_widget = slicer.modules.markups.createNewWidgetRepresentation()
     markups_widget.setMRMLScene(slicer.mrmlScene)
     markups_widget.show()
     markups_widget.enter()
+    self.exportLandmarksButton.enabled = True
     
   def updateStatus(self, index, string):
     # refresh table from file, update the status column, and save 
@@ -291,7 +349,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     if bool(self.fileTable):
       logic = INHSToolsLogic()
       logic.checkForStatusColumn(self.fileTable, self.tableSelector.currentPath) # if not present adds and saves to file
-      self.importButton.enabled = True
+      self.importVolumeButton.enabled = True
       self.assignLayoutDescription(self.fileTable)
       logic.hideCompletedSamples(self.fileTable)
       self.fileTable.SetLocked(True)
@@ -302,26 +360,26 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onSelect(self):
     if bool(self.volumeSelector.currentNode()):  
       if self.INHSFile(self.volumeSelector.currentNode().GetName()):
-        self.applySpacingButton.enabled =True
+        #self.applySpacingButton.enabled =True
         self.flipXButton.enabled = True
         self.flipYButton.enabled = True
         self.flipZButton.enabled = True
       else:
         print("File name must include string: 'INHS'")
         logging.debug("Invalid filename: must include string: 'INHS'")
-        self.applySpacingButton.enabled = False
+        #self.applySpacingButton.enabled = False
         self.flipXButton.enabled = False
         self.flipYButton.enabled = False
         self.flipZButton.enabled = False
     else:
-      self.applySpacingButton.enabled = False
+      #self.applySpacingButton.enabled = False
       self.flipXButton.enabled = False
       self.flipYButton.enabled = False
       self.flipZButton.enabled = False  
 
-  def onApplySpacingButton(self):
-    logic = INHSToolsLogic()
-    logic.run(self.volumeSelector.currentNode(), self.spacingX.value, self.spacingY.value, self.spacingZ.value)
+#  def onApplySpacingButton(self):
+#    logic = INHSToolsLogic()
+#    logic.run(self.volumeSelector.currentNode(), self.spacingX.value, self.spacingY.value, self.spacingZ.value)
   
   def onFlipX(self):
     logic = INHSToolsLogic()
@@ -348,15 +406,15 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     else:
       return False
   
-  def onImport(self):
+  def onImportVolume(self):
     logic = INHSToolsLogic()
     self.activeCellString = logic.getActiveCell()
     if bool(self.activeCellString):
       if self.INHSFile(self.activeCellString):
         self.volumeNode = logic.runImport(self.activeCellString)
         if bool(self.volumeNode):
-          self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", 'F')
-          self.exportButton.enabled = True  
+          self.launchMarkupsButton.enabled = True
+          self.startSegmentationButton.enabled = True
           self.volumeSelector.setCurrentNode(self.volumeNode)
           self.activeRow = logic.getActiveCellRow()
           self.updateStatus(self.activeRow, 'Processing')
@@ -367,8 +425,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     else:
       logging.debug("No valid table cell selected.")
   
-  def onExport(self):
-    if bool(self.fiducialNode):
+  def onExportLandmarks(self):
+    if hasattr(self, 'fiducialNode'):
       fiducialName = os.path.splitext(self.activeCellString)[0]
       fiducialOutput = os.path.join(outputPathStr, fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
@@ -377,18 +435,25 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def updateTableAndGUI(self):
     self.updateStatus(self.activeRow, 'Complete')
     # clean up
-    if bool(self.fiducialNode):  
+    if hasattr(self, 'fiducialNode'):
       slicer.mrmlScene.RemoveNode(self.fiducialNode)  
-    if bool(self.volumeNode):
+    if hasattr(self, 'volumeNode'):
       slicer.mrmlScene.RemoveNode(self.volumeNode)
-    self.exportButton.enabled = False 
-    self.importButton.enabled = True 
+    if hasattr(self, 'segmentationNode'):
+      slicer.mrmlScene.RemoveNode(self.segmentationNode)
+    if hasattr(self, 'labelMap'):
+      slicer.mrmlScene.RemoveNode(self.labelMap)
     self.selectorButton.enabled  = bool(self.tableSelector.currentPath)
-    self.applySpacingButton.enabled = False
+    self.importVolumeButton.enabled = True
     self.flipXButton.enabled = False
     self.flipYButton.enabled = False
-
-    
+    self.flipZButton.enabled = False
+    self.launchMarkupsButton.enabled = False
+    self.exportLandmarksButton.enabled = False
+    self.startSegmentationButton.enabled = False
+    self.exportSegmentationButton.enabled = False
+    #self.applySpacingButton.enabled = False
+   
 class LogDataObject:
   """This class i
      """
@@ -457,6 +522,27 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, 1, imageData)
   
+  def initializeSegmentation(self, masterVolumeNode):
+    # Create segmentation
+    segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', "fishnumber-segmentation")
+    segmentationNode.CreateDefaultDisplayNodes() # only needed for display
+    segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(masterVolumeNode)
+    segmentation = segmentationNode.GetSegmentation()
+    # Add template segments
+    self.addNewSegment(segmentation, "Dorsal Fin", (1.0, 1.0, 0.0))
+    self.addNewSegment(segmentation, "Adipose Fin", (0.172549, 0.764706, 0.945098))
+    self.addNewSegment(segmentation, "Caudal Fin", (0.396078, 0.027451, 0.447059))
+    self.addNewSegment(segmentation, "Anal Fin", (0.513725, 0.764706, 0.180392))
+    self.addNewSegment(segmentation, "Pelvic Fin", (1.0, 0.0, 0.0))
+    self.addNewSegment(segmentation, "Pectoral Fin", (0.121569, 0.823529, 0.203922))
+    self.addNewSegment(segmentation, "HeadEye", (0.0235294, 0.333333, 1.0))
+    self.addNewSegment(segmentation, "Eye", (1.0, 0.0, 0.498039))
+    return segmentationNode
+    
+  def addNewSegment(self,segmentation, name, color):
+    segmentID = segmentation.AddEmptySegment(name)
+    segmentation.GetSegment(segmentID).SetColor(color)
+    
   def flip(self, volumeNode, transformMatrix):
     transform = slicer.vtkMRMLTransformNode()
     transform.SetName('FlipTransformation')
