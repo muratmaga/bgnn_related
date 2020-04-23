@@ -524,7 +524,8 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
   
   def initializeSegmentation(self, masterVolumeNode):
     # Create segmentation
-    segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', "fishnumber-segmentation")
+    segmentationName = masterVolumeNode.GetName()
+    segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', segmentationName +'_segmentation')
     segmentationNode.CreateDefaultDisplayNodes() # only needed for display
     segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(masterVolumeNode)
     segmentation = segmentationNode.GetSegmentation()
