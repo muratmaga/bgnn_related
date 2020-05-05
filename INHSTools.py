@@ -294,18 +294,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   
   def onExportSegmentation(self):
     if hasattr(self,'segmentationNode'):
-      segmentName = self.segmentationNode.GetName()
-      self.labelMap = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode', segmentName)
-      success = slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(self.segmentationNode,self.labelMap)
-      if(success):
-        segmentationName = os.path.splitext(self.activeCellString)[0]
-        segmentationOutput = os.path.join(outputPathStr, 'Segmentations', segmentationName +'.nrrd')
-        slicer.util.saveNode(self.labelMap, segmentationOutput)
-        self.updateTableAndGUI()
-      else:
-        logging.debug("No valid segments to export.")
+      segmentationName = os.path.splitext(self.activeCellString)[0]
+      segmentationOutput = os.path.join(outputPathStr, 'Segmentations', segmentationName +'.nrrd')
+      slicer.util.saveNode(self.segmentationNode, segmentationOutput)
+      self.updateTableAndGUI()
     else:
-      logging.debug("No valid segmentation node to export.")
+      logging.debug("No valid segmentation to export.")
       
   def onLaunchMarkups(self):
     self.fiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", 'F')
@@ -539,7 +533,6 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     self.addNewSegment(segmentation, "HeadEye", (0.0235294, 0.333333, 1.0))
     self.addNewSegment(segmentation, "Eye", (1.0, 0.0, 0.498039))
     self.addNewSegment(segmentation, "Caudal Fin Ray", (0.6392156862745098, 0.24705882352941178, 0.9607843137254902))
-    self.addNewSegment(segmentation, "Caudal Fin Spine", (0.9882352941176471, 0.5686274509803921, 0.7529411764705882))
     self.addNewSegment(segmentation, "Alt Fin Ray", (0.9764705882352941, 0.5215686274509804, 0.19215686274509805))
     self.addNewSegment(segmentation, "Alt Fin Spine", (0.13725490196078433, 0.4588235294117647, 0.21568627450980393))
     return segmentationNode
