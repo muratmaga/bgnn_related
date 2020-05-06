@@ -13,6 +13,7 @@ import string
 #define global variable for node management
 imagePathStr = os.environ.get('SEGMENTED_DIR','/segmented/INHS_segmented_padded_fish/')
 outputPathStr = os.environ.get('CSV_DIR','/segmented/fcsv/')
+segoutputPathStr = os.environ.get('CSV_DIR','/segmented/Segmentations/')
 labs = os.environ.get('labs','unknown_lab')
 
 class INHSTools(ScriptedLoadableModule):
@@ -295,7 +296,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onExportSegmentation(self):
     if hasattr(self,'segmentationNode'):
       segmentationName = os.path.splitext(self.activeCellString)[0]
-      segmentationOutput = os.path.join(outputPathStr, 'Segmentations', segmentationName +'.nrrd')
+      segmentationOutput = os.path.join(segoutputPathStr, segmentationName +'.nrrd')
       slicer.util.saveNode(self.segmentationNode, segmentationOutput)
       self.updateTableAndGUI()
     else:
