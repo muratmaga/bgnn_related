@@ -1,41 +1,31 @@
 # bgnn_related
-
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-</style>
-<table class="tg">
+<table>
 <thead>
   <tr>
-    <th class="tg-0pky"></th>
-    <th class="tg-c3ow">Day1</th>
-    <th class="tg-c3ow">Day2</th>
-    <th class="tg-c3ow">Day3</th>
-    <th class="tg-c3ow">Day4</th>
-    <th class="tg-c3ow">Day5</th>
+    <th></th>
+    <th>Day1</th>
+    <th>Day2</th>
+    <th>Day3</th>
+    <th>Day4</th>
+    <th>Day5</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td class="tg-0pky">Session 1   9.30-11.30</td>
-    <td class="tg-0pky">Introduction - Maga<br>SlicerMorph and SlicerMorphCloud setup</td>
-    <td class="tg-0pky">Imaging Concepts - Rolfe<br>Volume Rendering<br>Animations<br>Lighting<br>Markups</td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
+    <td>Session 1   9.30-11.30</td>
+    <td>Introduction - Maga<br><br>SlicerMorph and <br>SlicerMorphCloud setup<br>Sample Data<br>Customizations<br><br></td>
+    <td>Imaging Concepts - Rolfe<br><br>Volume Rendering<br>Animations<br>Lighting<br>Markups</td>
+    <td>GMM #1- Maga<br><br>Markups review<br>SampleData review<br>GPA in SlicerMorph<br>Plots &amp; 3D visualization<br><br><br></td>
+    <td>Semi-LMing<br>* Curves<br>* Patches<br>PseudoLMGenerator<br>MarkupEditor<br><br>ALPACA - Rolfe</td>
+    <td>Meet a Slicer Developer<br>Andras Lasso<br><br>Q&amp;A: Bring your questions<br>* How can I do X in Slicer?<br>* Segmentation Challenges<br>* Your question here....<br></td>
   </tr>
   <tr>
-    <td class="tg-0pky">Session   2 12:00-2:00p</td>
-    <td class="tg-0pky">ImageStacks<br>DICOMVolumes<br>Models<br>CropVolume<br>Transform<br>Save/Export Data</td>
-    <td class="tg-0pky">Segmentation</td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
+    <td>Session   2 12:00-2:00p</td>
+    <td>ImageStacks<br>DICOM<br>Volumes<br>Models<br>CropVolume<br>Transform<br>Save/Export Data</td>
+    <td>Segmentation Concepts<br>Segment Editor<br>Segmentations<br>Segmentation vs Labelmap<br>importing/Exporting Segmentations<br>Segment Statistics<br>Surface Toolbox<br>Dynamic Modeler</td>
+    <td>GMM#2 - Rolfe<br><br>GPA cont'ed<br>Continuing analysis in R<br></td>
+    <td>Putting it all together - Diamond<br><br>ALPACA Tutorial<br></td>
+    <td>Setting up a lab - Maga<br><br>Auto3Dgm tutorial<br>Odds and Ends<br>Evaluations</td>
   </tr>
 </tbody>
 </table>
