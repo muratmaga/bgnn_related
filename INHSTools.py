@@ -13,7 +13,7 @@ import string
 #define global variable for node management
 imagePathStr = os.environ.get('SEGMENTED_DIR','/segmented/INHS_segmented_padded_fish/')
 outputPathStr = os.environ.get('CSV_DIR','/segmented/fcsv/')
-segoutputPathStr = os.environ.get('CSV_DIR','/segmented/Segmentations/')
+segoutputPathStr = os.environ.get('SEGOUT_DIR','/segmented/Segmentations/')
 labs = os.environ.get('labs','unknown_lab')
 
 class INHSTools(ScriptedLoadableModule):
