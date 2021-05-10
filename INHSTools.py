@@ -367,7 +367,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onImportVolume(self):
     logic = INHSToolsLogic()
     self.activeCellString = logic.getActiveCellByCol(15)
-    self.currentSpecimenName = logic.getActiveCellByCol(0)
+    currentSpecimenFileName = logic.getActiveCellByCol(12)
+    self.currentSpecimenName, ext = os.path.splitext(currentSpecimenFileName)
     if bool(self.activeCellString):
       self.volumeNode = logic.runImportFromURL(self.activeCellString)
       if bool(self.volumeNode):
