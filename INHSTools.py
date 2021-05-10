@@ -267,12 +267,10 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     if hasattr(self,'segmentationNode'):
       segmentationName = os.path.splitext(self.activeCellString)[0]
       segmentationOutput = os.path.join(self.outputDirSelector.currentPath, self.currentSpecimenName +'.nrrd')
-      print("saving seg to: ", segmentationOutput)
       slicer.util.saveNode(self.segmentationNode, segmentationOutput)
       self.outputLabelmapNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
       slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(self.segmentationNode, self.outputLabelmapNode)
       tifOutput = os.path.join(self.outputDirSelector.currentPath, self.currentSpecimenName +'.tif')
-      print("saving tif to: ", tifOutput)
       slicer.util.saveNode(self.outputLabelmapNode, tifOutput)
       self.updateTableAndGUI()
     else:
