@@ -7,13 +7,13 @@ from slicer.ScriptedLoadableModule import *
 import logging
 import numpy as np
 import string
+
+import SampleData
+
 #
 # INHSTools
 #
-#define global variable for node management
-imagePathStr = os.environ.get('SEGMENTED_DIR','/segmented/INHS_segmented_padded_fish/')
-outputPathStr = os.environ.get('CSV_DIR','/segmented/fcsv/')
-segoutputPathStr = os.environ.get('CSV_DIR','/segmented/Segmentations/')
+#define global variable 
 labs = os.environ.get('labs','unknown_lab')
 
 class INHSTools(ScriptedLoadableModule):
@@ -97,23 +97,32 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     #IOFormLayout = qt.QFormLayout(IOCollapsibleButton)
     IOFormLayout= qt.QGridLayout(IOCollapsibleButton)
+    
     #
     # Table volume selector
     #
-    tableSelectorLable=qt.QLabel("Input table: ")
+    tableSelectorLabel=qt.QLabel("Input table: ")
     self.tableSelector = ctk.ctkPathLineEdit()
     self.tableSelector.nameFilters=["*.csv"]
     self.tableSelector.setToolTip( "Select table with filenames to process" )
-    #IOFormLayout.addRow("Input table: ", self.tableSelector)
-    
     
     self.selectorButton = qt.QPushButton("Load Table")
     self.selectorButton.toolTip = "Load the table of image filenames to process"
     self.selectorButton.enabled = False
-    #IOFormLayout.addRow(self.selectorButton)
-    IOFormLayout.addWidget(tableSelectorLable,1,1)
+    IOFormLayout.addWidget(tableSelectorLabel,1,1)
     IOFormLayout.addWidget(self.tableSelector,1,2)
     IOFormLayout.addWidget(self.selectorButton,1,3)
+    
+    #
+    # Output path selector
+    #
+    outputDirSelectorLabel=qt.QLabel("Output Path: ")
+    self.outputDirSelector = ctk.ctkPathLineEdit()
+    self.outputDirSelector.filters = ctk.ctkPathLineEdit.Dirs
+    self.outputDirSelector.currentPath = slicer.app.cachePath
+    self.outputDirSelector.setToolTip( "Select directory for output" )
+    IOFormLayout.addWidget(outputDirSelectorLabel,2,1,1,1)
+    IOFormLayout.addWidget(self.outputDirSelector,2,2,1,2)
     
     #
     # Import Volume Button
@@ -121,7 +130,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.importVolumeButton = qt.QPushButton("Import image")
     self.importVolumeButton.toolTip = "Import the image selected in the table"
     self.importVolumeButton.enabled = False
-    IOFormLayout.addWidget(self.importVolumeButton,2,1,1,3)
+    IOFormLayout.addWidget(self.importVolumeButton,3,1,1,3)
     
     #
     # Image editing Area
@@ -148,45 +157,6 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.volumeSelector.setMRMLScene( slicer.mrmlScene )
     self.volumeSelector.setToolTip( "Select volume to resample" )
     parametersFormLayout.addRow("Input Volume: ", self.volumeSelector)
-    
-#    #
-#    # input spacing
-#    #
-#    spacingLayout= qt.QGridLayout()
-#    self.spacingX = ctk.ctkDoubleSpinBox()
-#    self.spacingX.value = 1
-#    self.spacingX.minimum = 0
-#    self.spacingX.singleStep = 1
-#    self.spacingX.setDecimals(2)
-#    self.spacingX.setToolTip("Input spacing X")
-#
-#    self.spacingY = ctk.ctkDoubleSpinBox()
-#    self.spacingY.value = 1
-#    self.spacingY.minimum = 0
-#    self.spacingY.singleStep = 1
-#    self.spacingY.setDecimals(2)
-#    self.spacingY.setToolTip("Input spacing Y")
-#
-#    self.spacingZ = ctk.ctkDoubleSpinBox()
-#    self.spacingZ.value = 1
-#    self.spacingZ.minimum = 0
-#    self.spacingZ.singleStep = 1
-#    self.spacingZ.setDecimals(2)
-#    self.spacingZ.setToolTip("Input spacing Z")
-#
-#    spacingLayout.addWidget(self.spacingX,1,2)
-#    spacingLayout.addWidget(self.spacingY,1,3)
-#    spacingLayout.addWidget(self.spacingZ,1,4)
-#
-#    parametersFormLayout.addRow("Spacing (mm):", spacingLayout)
-    
-#    #
-#    # Apply Button
-#    #
-#    self.applySpacingButton = qt.QPushButton("Apply Spacing")
-#    self.applySpacingButton.toolTip = "Run the algorithm."
-#    self.applySpacingButton.enabled = False
-#    parametersFormLayout.addRow(self.applySpacingButton)
     
     #
     # Flip X-axis Button
@@ -227,8 +197,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     segmentTab = qt.QWidget()
     segmentTabLayout = qt.QFormLayout(segmentTab)
 
-    tabsWidget.addTab(landmarkTab, "Landmark")
     tabsWidget.addTab(segmentTab, "Segment")
+    tabsWidget.addTab(landmarkTab, "Landmark")
     annotationsLayout.addWidget(tabsWidget)
 
     #
@@ -296,8 +266,12 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   def onExportSegmentation(self):
     if hasattr(self,'segmentationNode'):
       segmentationName = os.path.splitext(self.activeCellString)[0]
-      segmentationOutput = os.path.join(segoutputPathStr, segmentationName +'.nrrd')
+      segmentationOutput = os.path.join(self.outputDirSelector.currentPath, self.currentSpecimenName +'.nrrd')
       slicer.util.saveNode(self.segmentationNode, segmentationOutput)
+      self.outputLabelmapNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
+      slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(self.segmentationNode, self.outputLabelmapNode)
+      tifOutput = os.path.join(self.outputDirSelector.currentPath, self.currentSpecimenName +'.tif')
+      slicer.util.saveNode(self.outputLabelmapNode, tifOutput)
       self.updateTableAndGUI()
     else:
       logging.debug("No valid segmentation to export.")
@@ -318,7 +292,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
     self.fileTable.SetLocked(True)
     self.fileTable.SetName(name)
     logic = INHSToolsLogic()
-    logic.hideCompletedSamples(self.fileTable)
+    #logic.hideCompletedSamples(self.fileTable)
     statusColumn = self.fileTable.GetTable().GetColumnByName('Status')
     statusColumn.SetValue(index-1, string)
     #set the user to the lab based on an environment variable
@@ -346,7 +320,7 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       logic.checkForStatusColumn(self.fileTable, self.tableSelector.currentPath) # if not present adds and saves to file
       self.importVolumeButton.enabled = True
       self.assignLayoutDescription(self.fileTable)
-      logic.hideCompletedSamples(self.fileTable)
+      #logic.hideCompletedSamples(self.fileTable)
       self.fileTable.SetLocked(True)
       self.fileTable.GetTable().Modified() # update table view
     else:
@@ -354,28 +328,15 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   
   def onSelect(self):
     if bool(self.volumeSelector.currentNode()):  
-      if self.INHSFile(self.volumeSelector.currentNode().GetName()):
-        #self.applySpacingButton.enabled =True
-        self.flipXButton.enabled = True
-        self.flipYButton.enabled = True
-        self.flipZButton.enabled = True
-      else:
-        print("File name must include string: 'INHS'")
-        logging.debug("Invalid filename: must include string: 'INHS'")
-        #self.applySpacingButton.enabled = False
-        self.flipXButton.enabled = False
-        self.flipYButton.enabled = False
-        self.flipZButton.enabled = False
+      self.flipXButton.enabled = True
+      self.flipYButton.enabled = True
+      self.flipZButton.enabled = True
     else:
       #self.applySpacingButton.enabled = False
       self.flipXButton.enabled = False
       self.flipYButton.enabled = False
       self.flipZButton.enabled = False  
 
-#  def onApplySpacingButton(self):
-#    logic = INHSToolsLogic()
-#    logic.run(self.volumeSelector.currentNode(), self.spacingX.value, self.spacingY.value, self.spacingZ.value)
-  
   def onFlipX(self):
     logic = INHSToolsLogic()
     matrix = vtk.vtkMatrix4x4()
@@ -403,27 +364,26 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
   
   def onImportVolume(self):
     logic = INHSToolsLogic()
-    self.activeCellString = logic.getActiveCell()
+    self.activeCellString = logic.getActiveCellByCol(15)
+    currentSpecimenFileName = logic.getActiveCellByCol(12)
+    self.currentSpecimenName, ext = os.path.splitext(currentSpecimenFileName)
     if bool(self.activeCellString):
-      if self.INHSFile(self.activeCellString):
-        self.volumeNode = logic.runImport(self.activeCellString)
-        if bool(self.volumeNode):
-          self.launchMarkupsButton.enabled = True
-          self.startSegmentationButton.enabled = True
-          self.volumeSelector.setCurrentNode(self.volumeNode)
-          self.activeRow = logic.getActiveCellRow()
-          self.updateStatus(self.activeRow, 'Processing')
-        else: 
-          logging.debug("Error loading associated files.")
-      else:
-        logging.debug("Invalid filename: must include string: 'INHS'")
+      self.volumeNode = logic.runImportFromURL(self.activeCellString)
+      if bool(self.volumeNode):
+        self.launchMarkupsButton.enabled = True
+        self.startSegmentationButton.enabled = True
+        self.volumeSelector.setCurrentNode(self.volumeNode)
+        self.activeRow = logic.getActiveCellRow()
+        self.updateStatus(self.activeRow, 'Processing')
+      else: 
+        logging.debug("Error loading associated files.")
     else:
       logging.debug("No valid table cell selected.")
   
   def onExportLandmarks(self):
     if hasattr(self, 'fiducialNode'):
       fiducialName = os.path.splitext(self.activeCellString)[0]
-      fiducialOutput = os.path.join(outputPathStr, fiducialName+'.fcsv')
+      fiducialOutput = os.path.join(self.outputDirSelector.currentPath, fiducialName+'.fcsv')
       slicer.util.saveNode(self.fiducialNode, fiducialOutput)   
       self.updateTableAndGUI()         
       
@@ -436,8 +396,8 @@ class INHSToolsWidget(ScriptedLoadableModuleWidget):
       slicer.mrmlScene.RemoveNode(self.volumeNode)
     if hasattr(self, 'segmentationNode'):
       slicer.mrmlScene.RemoveNode(self.segmentationNode)
-    if hasattr(self, 'labelMap'):
-      slicer.mrmlScene.RemoveNode(self.labelMap)
+    if hasattr(self, 'outputLabelmapNode'):
+      slicer.mrmlScene.RemoveNode(self.outputLabelmapNode)
     self.selectorButton.enabled  = bool(self.tableSelector.currentPath)
     self.importVolumeButton.enabled = True
     self.flipXButton.enabled = False
@@ -556,12 +516,20 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     tableView=slicer.app.layoutManager().tableWidget(0).tableView()
     if bool(tableView.selectedIndexes()):
       index = tableView.selectedIndexes()[0]
-      indexTuple = [index.row(), index.column()]
       tableString = tableView.mrmlTableNode().GetCellText(index.row()-1,index.column())
       return tableString
     else:
       return ""
   
+  def getActiveCellByCol(self, colNumber):
+    tableView=slicer.app.layoutManager().tableWidget(0).tableView()
+    if bool(tableView.selectedIndexes()):
+      index = tableView.selectedIndexes()[0]
+      tableString = tableView.mrmlTableNode().GetCellText(index.row()-1,colNumber)
+      return tableString
+    else:
+      return ""
+      
   def getActiveCellRow(self):
     tableView=slicer.app.layoutManager().tableWidget(0).tableView()
     if bool(tableView.selectedIndexes()):
@@ -579,6 +547,29 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     except:
       False
   
+  def runImportFromURL(self,link):
+    base = os.path.basename(link) 
+    fileName = base.split('?')[0]
+    fileNameBase, extension = os.path.splitext(fileName)
+    if(extension in ['.dcm', '.nrrd', '.nii', '.mhd', '.mha', '.hdr', '.img', '.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff']):
+      fileTypes = 'VolumeFile'
+    else:
+      logging.debug('Could not download data. Not a supported file type.')   
+      return False
+      
+    sampleDataLogic = SampleData.SampleDataLogic()
+    loadedNodes = sampleDataLogic.downloadFromURL(
+    nodeNames= fileNameBase,
+    fileNames= fileName,
+    loadFileTypes=fileTypes,
+    loadFiles = True,
+    uris= link)
+    if(loadedNodes[0]):
+      return loadedNodes[0]
+    else:
+      logging.debug('Load from URL failed')   
+      return False
+      
   def hideCompletedSamples(self, table):
     rowNumber = table.GetNumberOfRows()
     statusColumn = table.GetTable().GetColumnByName('Status')
