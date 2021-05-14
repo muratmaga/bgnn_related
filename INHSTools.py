@@ -493,6 +493,7 @@ class INHSToolsLogic(ScriptedLoadableModuleLogic):
     self.addNewSegment(segmentation, "Pectoral Fin", (0.121569, 0.823529, 0.203922))
     self.addNewSegment(segmentation, "HeadEye", (0.0235294, 0.333333, 1.0))
     self.addNewSegment(segmentation, "Eye", (1.0, 0.0, 0.498039))
+    self.addNewSegment(segmentation, "trunk", (1.0, 0.0, 1.0))
     self.addNewSegment(segmentation, "Caudal Fin Ray", (0.6392156862745098, 0.24705882352941178, 0.9607843137254902))
     self.addNewSegment(segmentation, "Alt Fin Ray", (0.9764705882352941, 0.5215686274509804, 0.19215686274509805))
     self.addNewSegment(segmentation, "Alt Fin Spine", (0.13725490196078433, 0.4588235294117647, 0.21568627450980393))
